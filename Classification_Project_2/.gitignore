@@ -76,17 +76,26 @@ artifacts/experiments/
 *.err
 
 ################################################################################
+# EXPERIMENTAL & SWEEP SCRIPTS (NOT NEEDED FOR PRODUCTION)
+################################################################################
+
+# Exclude sweep and experiment scripts - not needed for main models
+scripts/run_*sweep*.py
+scripts/run_experiments*.py
+scripts/resume_overnight*.py
+scripts/tune_*.py
+!tune_ensemble.py
+scripts/run_*
+
+################################################################################
 # SUBMISSION & INFERENCE (SHOULD BE TRACKED IN GIT)
 ################################################################################
 
 # These files ARE important and SHOULD be committed:
 # - Configuration templates: configs/
-# - Training scripts: scripts/
+# - Core training scripts: scripts/train_*.py, scripts/eval_*.py
 # - API and model loading code: api.py, model.py
 # - Ensemble configuration for submission: cnn/ensemble_submit.json
-# 
-# Example git commands to track these:
-# git add configs/ scripts/ api.py model.py cnn/ensemble_submit.json
 
 ################################################################################
 # OS-SPECIFIC
