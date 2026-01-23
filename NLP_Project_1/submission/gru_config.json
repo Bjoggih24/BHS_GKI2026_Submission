@@ -1,0 +1,8 @@
+{
+  "embed_dim": 256,
+  "hidden_dim": 544,
+  "layers": 1,
+  "max_ctx_len": 256,
+  "cache_len": 128,
+  "cache_weight": 0.0
+}

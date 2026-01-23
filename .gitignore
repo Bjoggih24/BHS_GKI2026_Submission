@@ -1,0 +1,123 @@
+################################################################################
+# PROJECT-SPECIFIC ARTIFACTS (ORGANIZED BY CURRENT FOLDER NAMES)
+################################################################################
+
+# Classification_Project_2: Trained models and features
+Classification_Project_2/artifacts/features/
+Classification_Project_2/artifacts/experiments/
+!Classification_Project_2/artifacts/
+!Classification_Project_2/artifacts/split_seed42/
+!Classification_Project_2/artifacts/ensemble_submit.json
+!Classification_Project_2/artifacts/ensemble_submit_uniform.json
+!Classification_Project_2/artifacts/ensemble_greedy_coord.json
+!Classification_Project_2/artifacts/ensemble_greedy_coord_fine.json
+!Classification_Project_2/artifacts/ensemble_top12_coord.json
+!Classification_Project_2/artifacts/ensemble_topK.json
+!Classification_Project_2/artifacts/ensemble_top3.json
+!Classification_Project_2/artifacts/norm_stats.npz
+
+# TimeSeries_Project_3: Trained models and data
+TimeSeries_Project_3/artifacts/runs/
+!TimeSeries_Project_3/artifacts/
+!TimeSeries_Project_3/artifacts/active_model.json
+!TimeSeries_Project_3/artifacts/active_model_top3_weighted.json
+!TimeSeries_Project_3/artifacts/active_model_extratrees_only.json
+!TimeSeries_Project_3/artifacts/runs/
+!TimeSeries_Project_3/artifacts/runs/20260123_015301_lgbm_ps_full_v2/
+!TimeSeries_Project_3/artifacts/runs/20260123_015301_lgbm_ps_full_v2/config.json
+!TimeSeries_Project_3/artifacts/runs/20260123_015951_et_ps_full_v1/
+!TimeSeries_Project_3/artifacts/runs/20260123_015951_et_ps_full_v1/config.json
+!TimeSeries_Project_3/artifacts/runs/20260120_172636_ensemble_tune/
+!TimeSeries_Project_3/artifacts/runs/20260120_172636_ensemble_tune/config.json
+!TimeSeries_Project_3/artifacts/runs/20260120_172636_ensemble_tune/ensemble_weights.json
+!TimeSeries_Project_3/artifacts/runs/20260122_002138_ensemble_lgbm_ridge_tune/
+!TimeSeries_Project_3/artifacts/runs/20260122_002138_ensemble_lgbm_ridge_tune/config.json
+!TimeSeries_Project_3/artifacts/runs/20260122_002138_ensemble_lgbm_ridge_tune/active_model_config.json
+
+TimeSeries_Project_3/venvts
+TimeSeries_Project_3/data/*.csv
+TimeSeries_Project_3/data/weather_forecasts.csv
+TimeSeries_Project_3/data/weather_observations.csv
+TimeSeries_Project_3/data/weather_observations.zip
+TimeSeries_Project_3/data/sensor_timeseries.csv
+TimeSeries_Project_3/data/train.npz
+TimeSeries_Project_3/data/train_full.npz
+TimeSeries_Project_3/data/train_full_v2.npz
+TimeSeries_Project_3/data/train_full_v3.npz
+TimeSeries_Project_3/data/train_full_v4.npz
+TimeSeries_Project_3/data/train_full_v5.npz
+TimeSeries_Project_3/data/train_full_v6.npz
+TimeSeries_Project_3/data/train_full_v7.npz
+TimeSeries_Project_3/data/val_clean.npz
+
+################################################################################
+# PYTHON & ENVIRONMENT
+################################################################################
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# pip
+pip-log.txt
+pip-delete-this-directory.txt
+
+################################################################################
+# IDE & EDITOR
+################################################################################
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.env
+.env.local
+
+################################################################################
+# JUPYTER & NOTEBOOKS
+################################################################################
+.ipynb_checkpoints/
+*.ipynb
+
+################################################################################
+# TESTING & COVERAGE
+################################################################################
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+################################################################################
+# NLP_PROJECT_1: DATA (git-ignored since not committed initially)
+################################################################################
+NLP_Project_1/data/
+NLP_Project_1/venv/
+
+################################################################################
+# CLASSIFICATION_PROJECT_2: TEMPORARY FILES & LOGS
+################################################################################
+Classification_Project_2/logs/
+Classification_Project_2/*.log
+
+################################################################################
+# TIMESERIES_PROJECT_3: TEMPORARY FILES & LOGS
+################################################################################
+TimeSeries_Project_3/logs/
+TimeSeries_Project_3/*.log
+TimeSeries_Project_3/data/splits/
+TimeSeries_Project_3/debug_outputs/
+
+# Temporary snapshots
+habitat_classification_snapshot_20260117_182044.tar.gz

@@ -1,0 +1,14 @@
+{
+  "model_type": "et_ps_full_v1",
+  "use_weather": true,
+  "min_date": null,
+  "et_params": {
+    "n_estimators": 200,
+    "max_depth": 15,
+    "min_samples_leaf": 10,
+    "min_samples_split": 20,
+    "n_jobs": -1,
+    "random_state": 42
+  },
+  "n_sensors": 45
+}

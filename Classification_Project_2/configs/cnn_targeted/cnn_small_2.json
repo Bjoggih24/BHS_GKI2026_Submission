@@ -1,0 +1,11 @@
+{
+  "epochs": 40,
+  "batch_size": 192,
+  "lr": 0.0008,
+  "weight_decay": 0.0001,
+  "dropout": 0.3,
+  "label_smoothing": 0.05,
+  "patience": 8,
+  "scheduler": "cosine",
+  "use_log1p": 1
+}

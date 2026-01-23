@@ -1,0 +1,33 @@
+{
+  "feature_version": "v3",
+  "models": [
+    {
+      "type": "tabular",
+      "name": "ET_overfit_v3",
+      "model_path": "experiments/overnight_v3_runs/run_overnight_003/tabular/ET_overfit_v3/model.joblib",
+      "weight": 0.25
+    },
+    {
+      "type": "cnn",
+      "name": "cnn_small_2_nolog1p_seed5",
+      "model_path": "experiments/overnight_v3_runs/run_overnight_003/cnn/cnn_small_2_nolog1p_seed5/model.pt",
+      "weight": 0.31695085763931274,
+      "arch": "small_cnn",
+      "norm_path": "experiments/overnight_v3_runs/run_overnight_003/cnn/cnn_small_2_nolog1p_seed5/norm.npz"
+    },
+    {
+      "type": "tabular",
+      "name": "LGBM_A_v3",
+      "model_path": "experiments/overnight_v3_runs/run_overnight_001/tabular/LGBM_A_v3/model.joblib",
+      "weight": 0.27714061737060547
+    },
+    {
+      "type": "tabular",
+      "name": "MLP_TORCH_B",
+      "model_path": "experiments/targeted_ET_runs/mlp_test/MLP_TORCH_B/model.pt",
+      "weight": 0.1559084802865982
+    }
+  ],
+  "weighted_f1": 0.4105493049215633,
+  "note": "Greedy forward selection + coord ascent"
+}

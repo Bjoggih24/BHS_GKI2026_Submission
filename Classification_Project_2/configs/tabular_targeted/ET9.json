@@ -1,0 +1,9 @@
+{
+  "n_estimators": 6000,
+  "max_features": 0.35,
+  "min_samples_leaf": 2,
+  "bootstrap": true,
+  "max_samples": 0.8,
+  "n_jobs": -1,
+  "verbose": 0
+}
