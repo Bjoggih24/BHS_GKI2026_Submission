@@ -138,7 +138,6 @@ GKI2026/
 ## Notes
 
 - Each project has a `.gitignore` that excludes large artifacts (data, trained models) but tracks code, configs, and submission files
-- All three projects use FastAPI for inference endpoints
 - Complete reproducible pipelines are documented in each project's README
 - Experimental/auxiliary scripts are noted and explained in project-specific READMEs
 
