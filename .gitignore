@@ -35,19 +35,10 @@ TimeSeries_Project_3/artifacts/runs/
 !TimeSeries_Project_3/artifacts/runs/20260122_002138_ensemble_lgbm_ridge_tune/active_model_config.json
 
 TimeSeries_Project_3/venvts
-TimeSeries_Project_3/data/*.csv
-TimeSeries_Project_3/data/weather_forecasts.csv
-TimeSeries_Project_3/data/weather_observations.csv
-TimeSeries_Project_3/data/weather_observations.zip
-TimeSeries_Project_3/data/sensor_timeseries.csv
 TimeSeries_Project_3/data/train.npz
 TimeSeries_Project_3/data/train_full.npz
 TimeSeries_Project_3/data/train_full_v2.npz
 TimeSeries_Project_3/data/train_full_v3.npz
-TimeSeries_Project_3/data/train_full_v4.npz
-TimeSeries_Project_3/data/train_full_v5.npz
-TimeSeries_Project_3/data/train_full_v6.npz
-TimeSeries_Project_3/data/train_full_v7.npz
 TimeSeries_Project_3/data/val_clean.npz
 
 ################################################################################

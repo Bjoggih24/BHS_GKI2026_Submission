@@ -10,7 +10,7 @@ import os
 import numpy as np
 import torch
 
-from config import ARTIFACTS_DIR
+from config import ARTIFACTS_DIR, BASE_DIR
 from feature_utils import extract_tabular_features_v2, extract_tabular_features_v3
 
 _CACHE = {}
@@ -20,8 +20,14 @@ def _load_ensemble_config():
     override = os.environ.get("ENSEMBLE_CONFIG", "").strip()
     cfg_paths = []
     if override:
-        cfg_paths.append(ARTIFACTS_DIR / override)
+        override_path = Path(override)
+        if override_path.is_absolute():
+            cfg_paths.append(override_path)
+        else:
+            cfg_paths.append(BASE_DIR / override_path)
+            cfg_paths.append(ARTIFACTS_DIR / override_path)
     cfg_paths += [
+        BASE_DIR / "cnn" / "ensemble_submit.json",
         ARTIFACTS_DIR / "ensemble_submit.json",
         ARTIFACTS_DIR / "ensemble_topK.json",
         ARTIFACTS_DIR / "ensemble_top3.json",

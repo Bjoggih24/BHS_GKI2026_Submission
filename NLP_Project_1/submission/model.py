@@ -1,10 +1,10 @@
 """
-Simple n-gram model loader for next-byte prediction.
+Submission model loader for next-byte prediction.
 
 Supports:
+- Quantized GRU weights (primary, competition submission)
+- Smoothed/legacy n-gram JSON models (optional fallback)
 - Baseline heuristic model (no training)
-- Legacy JSON counts (raw counts)
-- Smoothed JSON model (format_version=2)
 """
 
 import math

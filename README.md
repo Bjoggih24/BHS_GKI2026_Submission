@@ -1,6 +1,6 @@
-# GKI 2026 — Three Machine Learning Projects
+# GKI 2026 - Three Machine Learning Projects
 
-This repository contains three complete machine learning projects from the GKI 2026 competition season:
+This repository contains three complete machine learning projects from Gervigreindakeppni Íslands 2026:
 
 1. **Classification_Project_2** — Icelandic Habitat Classification
 2. **TimeSeries_Project_3** — Hot Water Demand Forecasting
@@ -24,8 +24,8 @@ Each project is self-contained with its own reproducible pipeline, code, and doc
 - Final ensemble: 4-model weighted average
 
 **Key Files:**
-- `api.py` — FastAPI endpoint for predictions
-- `README.md` — full reproducible pipeline and setup instructions
+- `api.py` - FastAPI endpoint for predictions
+- `README.md` - full reproducible pipeline and setup instructions
 
 **Location:** [`Classification_Project_2/`](Classification_Project_2/)
 

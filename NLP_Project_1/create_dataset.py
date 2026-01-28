@@ -110,4 +110,4 @@ if __name__ == "__main__":
     print("=" * 60)
     print()
     print("You can now train your model with:")
-    print("  python train_ngram.py --data data/igc_full")
+    print("  python scripts/train_tiny_gru.py --data data/igc_full")

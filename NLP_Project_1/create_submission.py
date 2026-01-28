@@ -1,0 +1,64 @@
+#!/usr/bin/env python3
+"""
+Create a submission.zip file from the submission/ directory.
+
+Usage:
+    python create_submission.py
+
+This will create submission.zip containing everything in the submission/ folder.
+"""
+
+import zipfile
+from pathlib import Path
+
+
+def create_submission():
+    submission_dir = Path("submission")
+    output_file = Path("submission.zip")
+
+    if not submission_dir.exists():
+        print(f"ERROR: {submission_dir} directory not found!")
+        print("Make sure you have:")
+        print("  submission/model.py")
+        print("  submission/counts.json.gz (optional, from train_ngram.py)")
+        return
+
+    # Check for required files
+    model_file = submission_dir / "model.py"
+    if not model_file.exists():
+        print(f"ERROR: {model_file} not found!")
+        return
+
+    # Create zip
+    with zipfile.ZipFile(output_file, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for file in submission_dir.rglob("*"):
+            if file.is_file():
+                arcname = file.relative_to(submission_dir)
+                zf.write(file, arcname)
+                print(f"  Added: {arcname}")
+
+    # Check size
+    size_kb = output_file.stat().st_size / 1024
+    size_mb = size_kb / 1024
+
+    print()
+    print(f"Created: {output_file}")
+    print(f"Size: {size_kb:.1f} KB ({size_mb:.3f} MB)")
+
+    if size_mb > 1.0:
+        print()
+        print("WARNING: File exceeds 1 MB limit!")
+        print("Consider:")
+        print("  - Increasing --min-count when training")
+        print("  - Using a smaller n-gram order")
+        print("  - Compressing weights more aggressively")
+    elif size_mb > 0.9:
+        print()
+        print("WARNING: File is close to 1 MB limit!")
+
+    print()
+    print("Upload submission.zip to the competition website to evaluate.")
+
+
+if __name__ == "__main__":
+    create_submission()

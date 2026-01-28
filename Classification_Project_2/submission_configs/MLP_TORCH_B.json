@@ -1,0 +1,13 @@
+{
+  "hidden_dims": [512, 256, 128],
+  "batch_norm": true,
+  "dropout": 0.4,
+  "lr": 0.001,
+  "weight_decay": 0.0001,
+  "batch_size": 128,
+  "epochs": 300,
+  "patience": 30,
+  "label_smoothing": 0.0,
+  "standardize": true,
+  "max_grad_norm": 1.0
+}

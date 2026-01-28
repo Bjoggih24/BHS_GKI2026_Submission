@@ -1,0 +1,4 @@
+numpy>=1.23
+torch>=2.0
+datasets>=2.16
+huggingface_hub>=0.20

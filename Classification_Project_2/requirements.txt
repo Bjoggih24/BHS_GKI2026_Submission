@@ -10,6 +10,8 @@ joblib>=1.3.0
 # Deep learning (optional - uncomment if needed)
 torch>=2.0.0
 torchvision>=0.15.0
+# Optional: timm backbones (for non-small_cnn)
+timm>=0.9.0
 
 # API
 fastapi>=0.100.0

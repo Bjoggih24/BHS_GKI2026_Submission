@@ -16,40 +16,36 @@ Output:
 ## Project Structure (Key Files)
 
 API + Inference:
-- `api.py` — FastAPI `/predict` endpoint.
-- `model.py` — inference entry point; loads ensemble config and models.
-- `pyproject.toml` — project configuration and dependencies.
+- `api.py` -FastAPI `/predict` endpoint.
+- `model.py` -inference entry point; loads ensemble config and models.
+- `pyproject.toml` -project configuration and dependencies.
 
 Feature Engineering + Utilities:
-- `feature_utils.py` — tabular feature engineering (v1/v2/v3).
-- `utils.py` — patch encoding/decoding and data helpers.
-- `config.py` — paths for data/artifacts/splits.
+- `feature_utils.py` -tabular feature engineering (v1/v2/v3).
+- `utils.py` -patch encoding/decoding and data helpers.
+- `config.py` -paths for data/artifacts/splits.
 
 CNN:
-- `cnn/dataset.py` — CNN dataset loading utilities.
-- `cnn/model.py` — CNN model implementations.
-- `cnn/ensemble_submit.json` — final ensemble configuration for API inference.
+- `cnn/dataset.py` -CNN dataset loading utilities.
+- `cnn/model.py` -CNN model implementations.
+- `cnn/ensemble_submit.json` -final ensemble configuration for API inference.
 
 Training + Evaluation Scripts:
-- `scripts/precompute_tabular_features.py` — build `X_tabular_v*.npy`.
-- `scripts/train_tabular.py` — train ET/LGBM/XGB/MLP/Transformer tabular models.
-- `scripts/train_cnn.py` — train CNN models (small_cnn and timm backbones).
-- `scripts/run_overnight_v3_mix.py` — automated sweep (tabular + CNN).
-- `scripts/tune_topk_ensemble.py` — coordinate-ascent ensemble tuning.
-- `scripts/simple_ensemble_weights.py` — quick weighting tests.
-- `scripts/eval_with_tta.py` — CNN TTA evaluation.
+- `scripts/precompute_tabular_features.py` -build `X_tabular_v*.npy`.
+- `scripts/train_tabular.py` -train ET/LGBM/XGB/MLP/Transformer tabular models.
+- `scripts/train_cnn.py` -train CNN models (small_cnn and timm backbones).
+- `scripts/simple_ensemble_weights.py` -quick weighting tests.
 
 Artifacts (generated during training):
-- `artifacts/features/` — precomputed tabular features (`.npy` files).
-- `artifacts/experiments/` — trained model checkpoints and validation probabilities.
-- `artifacts/split_seed42/` — train/val index splits (required).
-- Other `artifacts/ensemble_*.json` files — alternative ensemble configurations.
+- `artifacts/features/` -precomputed tabular features (`.npy` files).
+- `artifacts/experiments/` -trained model checkpoints and validation probabilities.
+- `artifacts/split_seed42/` -train/val index splits (required).
+- Other `artifacts/ensemble_*.json` files -alternative ensemble configurations.
 
 ## Final Results
 
-**Validation Score (Leaderboard):** 89.9% accuracy (metric: 0.3899)
-
-Submitted on: January 23, 2026 @ 06:05 AM
+**Validation Score (Leaderboard):** Weighted F1: 0.3899
+**Test Scorer (Leaderbaord):** Weighted F1: 0.39
 
 ## Final Submission Ensemble
 
@@ -67,75 +63,62 @@ The API loads `cnn/ensemble_submit.json` by default. To override:
 export ENSEMBLE_CONFIG=path/to/custom_ensemble.json
 ```
 
-**Note:** Model paths in the ensemble config are relative to the `artifacts/` directory and must be trained before use (see Reproducible Pipeline below).
+**Note:** `ENSEMBLE_CONFIG` can be absolute or relative to the project root. Model paths inside the ensemble config are relative to the `artifacts/` directory and must be trained before use (see Reproducible Pipeline below). All tabular models in the final ensemble use **v3 features**.
 
 ## Data Requirements
 
 Before running the pipeline, ensure you have:
 
 1. **Split indices** in `artifacts/split_seed42/`:
-   - `train_indices.npy` — indices for training set
-   - `val_indices.npy` — indices for validation set
+   - `train_idx.npy` -indices for training set
+   - `val_idx.npy` -indices for validation set
 
 2. **Training data** in `data/train/`:
-   - Raw satellite imagery patches (format depends on data loader)
-   - Corresponding labels
+   - `patches.npy` -raw satellite imagery patches
+   - `train.csv` -labels (column: `vistgerd_idx`)
 
-3. **Configuration files** in `configs/`:
-   - Already included; covers all model architectures and hyperparameters
+3. **Submission configs** in `submission_configs/`:
+   - Only the configs used by the final ensemble
 
 ## Reproducible Pipeline
 
-### 1) Prepare data
+### 1) Prepare data + splits
 ```bash
+python scripts/make_split.py
 python scripts/precompute_tabular_features.py --version v3
 ```
 
 Outputs:
 - `artifacts/features/X_tabular_v3.npy`
 - `artifacts/features/y.npy`
+- `artifacts/split_seed42/train_idx.npy`
+- `artifacts/split_seed42/val_idx.npy`
 
 ### 2) Train tabular models (examples)
 ```bash
 python scripts/train_tabular.py \
   --model extratrees \
-  --params_json configs/overnight_v3/ET_overfit_v3.json \
+  --params_json submission_configs/ET_overfit_v3.json \
   --features_path artifacts/features/X_tabular_v3.npy \
   --labels_path artifacts/features/y.npy \
   --out_dir artifacts/experiments/manual/ET_overfit_v3
 ```
 
 Other key configs used:
-- `configs/overnight_v3/LGBM_A_v3.json`
-- `configs/tabular_targeted/MLP_TORCH_B.json`
+- `submission_configs/LGBM_A_v3.json`
+- `submission_configs/MLP_TORCH_B.json`
+All tabular models in the final ensemble should use `artifacts/features/X_tabular_v3.npy`.
 
 ### 3) Train CNN models
 ```bash
 python scripts/train_cnn.py \
   --arch small_cnn \
-  --params_json configs/overnight_v3/cnn_small_2_nolog1p_seed5.json \
+  --params_json submission_configs/cnn_small_2_nolog1p_seed5.json \
   --out_dir artifacts/experiments/manual/cnn_small_2_nolog1p_seed5
 ```
 
-### 4) Overnight sweep (optional)
-```bash
-python scripts/run_overnight_v3_mix.py
-```
-
-### 5) Ensemble tuning
-Coordinate ascent (top models):
-```bash
-python scripts/tune_topk_ensemble.py \
-  --prob_paths <val_probs...> \
-  --names <names...> \
-  --model_paths <model_paths...> \
-  --types <types...> \
-  --archs <archs...> \
-  --feature_version v3 \
-  --out_path artifacts/ensemble_topK.json
-```
-
-Quick weighting:
+### 4) Ensemble tuning
+Quick weighting (validation probs):
 ```bash
 python scripts/simple_ensemble_weights.py --prob_paths ... --names ...
 ```
@@ -168,24 +151,3 @@ The endpoint returns a single class id per patch.
 - Model paths in the ensemble config are relative to `artifacts/` and should be updated after training.
 - Torch models (MLP, CNN) require `torch` and `torchvision` (optional dependencies in `pyproject.toml`).
 
-## Experimental / Auxiliary Scripts
-
-The following scripts were used during exploration but are not part of the final submission pipeline:
-
-**Evaluation & Ensemble Tuning:**
-- `eval_local.py`, `ensemble_val.py` — local validation on subsets of training data
-- `tune_ensemble.py`, `tune_top3_ensemble.py` — earlier ensemble weight tuning (superseded by `tune_topk_ensemble.py`)
-- `ensemble_from_probs.py` — combine pre-computed probability outputs
-- `run_ensemble_sweep.py` — grid search over ensemble configurations
-
-**Training Sweeps (alternative approaches):**
-- `run_experiments.py`, `run_experiments_v2.py` — older experiment runners
-- `run_cnn_sweep.py`, `run_tabular_sweep.py`, `run_tabular_custom_sweep.py` — hyperparameter sweeps for individual models
-- `run_tabular_overnight.py`, `run_imgemb_tabular_sweep.py` — specialized sweeps (tabular only, with image embeddings)
-- `resume_overnight_v3.py` — resume interrupted training runs
-
-**Data & Feature Engineering:**
-- `make_split.py` — create train/validation splits
-- `merge_patches.py` — utilities for patch-level data manipulation
-- `extract_img_embeddings.py` — extract pre-computed image features
-- `compute_norm_stats.py` — compute normalization statistics for feature scaling
