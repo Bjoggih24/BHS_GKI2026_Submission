@@ -82,8 +82,17 @@ Before running the pipeline, ensure you have:
 
 ## Reproducible Pipeline
 
+### 0) Create a virtual environment + install deps
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
 ### 1) Prepare data + splits
 ```bash
+python scripts/prepare_train_data.py
 python scripts/make_split.py
 python scripts/precompute_tabular_features.py --version v3
 ```
@@ -118,13 +127,29 @@ python scripts/train_cnn.py \
 ```
 
 ### 4) Ensemble tuning
-Quick weighting (validation probs):
+Greedy selection + coord ascent (validation probs):
 ```bash
-python scripts/simple_ensemble_weights.py --prob_paths ... --names ...
+python scripts/tune_ensemble.py \
+  --prob_paths \
+    artifacts/experiments/manual/ET_overfit_v3/val_probs.npy \
+    artifacts/experiments/manual/LGBM_A_v3/val_probs.npy \
+    artifacts/experiments/manual/cnn_small_2_nolog1p_seed5/val_probs.npy \
+    artifacts/experiments/manual/MLP_TORCH_B/val_probs.npy \
+  --names ET_overfit_v3 LGBM_A_v3 cnn_small_2_nolog1p_seed5 MLP_TORCH_B \
+  --model_types tabular tabular cnn tabular \
+  --model_paths \
+    experiments/manual/ET_overfit_v3/model.joblib \
+    experiments/manual/LGBM_A_v3/model.joblib \
+    experiments/manual/cnn_small_2_nolog1p_seed5/model.pt \
+    experiments/manual/MLP_TORCH_B/model.pt \
+  --cnn_archs "" "" small_cnn "" \
+  --cnn_norm_paths "" "" experiments/manual/cnn_small_2_nolog1p_seed5/norm.npz "" \
+  --force_all \
+  --out_json artifacts/ensemble_submit.json
 ```
 
 Final submission config is stored in:
-- `cnn/ensemble_submit.json`
+- `cnn/ensemble_submit.json` (or set `ENSEMBLE_CONFIG=artifacts/ensemble_submit.json`)
 
 ## Inference / API
 
@@ -151,3 +176,8 @@ The endpoint returns a single class id per patch.
 - Model paths in the ensemble config are relative to `artifacts/` and should be updated after training.
 - Torch models (MLP, CNN) require `torch` and `torchvision` (optional dependencies in `pyproject.toml`).
 
+## Git Tracking
+
+All project code, configs, and data artifacts needed for reproducibility are intended to be tracked in git. The only excluded outputs are the large model training outputs under:
+
+- `artifacts/experiments/`

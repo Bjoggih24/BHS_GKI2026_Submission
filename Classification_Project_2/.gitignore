@@ -91,7 +91,6 @@ scripts/merge_patches.py
 scripts/run_tabular_batch.py
 scripts/run_tabular_overnight.py
 scripts/run_overnight_v3_mix.py
-scripts/tune_ensemble.py
 
 ################################################################################
 # SUBMISSION & INFERENCE (SHOULD BE TRACKED IN GIT)
