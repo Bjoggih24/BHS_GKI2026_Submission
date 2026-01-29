@@ -55,7 +55,15 @@ Before running the pipeline:
 
 ## Reproducible Pipeline
 
-### 0) Extract raw data files
+### 0) Create a virtual environment + install deps
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+### 1) Extract raw data files
 
 ```bash
 cd data
@@ -70,7 +78,7 @@ This creates:
 - `data/weather_forecasts.csv`
 - `data/weather_observations.csv`
 
-### 1) Build weather aggregates
+### 2) Build weather aggregates
 
 ```bash
 python scripts/build_weather_agg.py
@@ -80,7 +88,7 @@ This creates:
 - `data/weather_agg.csv`
 - `data/weather_obs_agg.csv`
 
-### 2) Build training windows
+### 3) Build training windows
 
 ```bash
 python scripts/build_train_full.py \
@@ -94,7 +102,20 @@ Notes:
 - Starts from 2022-07-01 when weather forecasts become available
 - Weather data loaded on-demand during training (not stored in NPZ for size efficiency)
 
-### 3) Train the main models
+### 3b) Optional: build training windows in 3 batches (OOM-safe)
+
+If you hit OOM, build `train_full.npz` in three batches and merge:
+```bash
+mkdir -p data/train_batches
+python scripts/build_train_full.py --stride 24 --min-date 2022-07-01 --output data/train_batches/train_full.npz --batch-start 0 --batch-size 304
+python scripts/build_train_full.py --stride 24 --min-date 2022-07-01 --output data/train_batches/train_full.npz --batch-start 304 --batch-size 304
+python scripts/build_train_full.py --stride 24 --min-date 2022-07-01 --output data/train_batches/train_full.npz --batch-start 608 --batch-size 304
+python scripts/merge_batches.py "data/train_batches/train_full_batch*.npz" --output data/train_full.npz
+```
+
+Note: The batch size of 304 assumes 912 total samples for this dataset; adjust if your totals differ.
+
+### 4) Train the main models
 
 ```bash
 python scripts/train_models.py --train-path data/train_full.npz --models lgbm,extratrees
@@ -107,7 +128,14 @@ This trains:
 Outputs are written to:
 - `artifacts/runs/<timestamp>_<model_name>/` (contains model files and config.json)
 
-### 4) Update the active model config (if needed)
+### 4b) Quick eval (biased, rough estimate)
+
+This uses training samples; very biased and was only used to compare different models/ensembles.
+```bash
+python scripts/eval_quick.py --train-path data/train_full.npz --max-samples 100
+```
+
+### 5) Update the active model config 
 
 The ensemble is configured in `artifacts/active_model.json`:
 ```json
@@ -123,13 +151,16 @@ The ensemble is configured in `artifacts/active_model.json`:
 }
 ```
 
-### 5) Run the API
+### 6) Run the API
 
 ```bash
 python api.py
 ```
 
 Server starts on `http://0.0.0.0:8080`
+
+On startup, the API performs a one-shot warmup inference to cache models.
+To disable: `MODEL_WARMUP=0 python api.py`
 
 **Input format** (matches competition API):
 - `sensor_history`: array of shape (672, 45) -hourly readings for all sensors
@@ -138,6 +169,15 @@ Server starts on `http://0.0.0.0:8080`
 - `weather_history`: rows with historical weather observations for context
 
 **Output**: JSON with 72-hour forecasts for all 45 sensors
+
+### 6b) API-based eval (hosted, biased)
+
+Start the API in one terminal, then evaluate by sending raw payloads:
+```bash
+python scripts/eval_api.py --train-path data/train_full.npz --max-samples 25
+```
+
+Note: this uses training samples and is a rough, optimistic estimate. Treat it as a HIGHLY biased sanity check only.
 
 ## Repro Checklist
 

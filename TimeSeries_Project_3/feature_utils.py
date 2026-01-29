@@ -819,6 +819,8 @@ def build_weather_obs_summary_features(
         return np.zeros((HORIZON, n_feats), dtype=np.float32)
 
     # Ensure mat has no NaN by filling with column means or zeros
+    if not mat.flags.writeable:
+        mat = np.array(mat, copy=True)
     col_means = np.nanmean(mat, axis=0)
     col_means = np.where(np.isnan(col_means), 0.0, col_means)
     for j in range(mat.shape[1]):

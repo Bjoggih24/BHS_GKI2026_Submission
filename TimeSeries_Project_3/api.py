@@ -7,6 +7,8 @@ Usage:
 The server will start on http://0.0.0.0:8080
 """
 
+import os
+from pathlib import Path
 import uvicorn
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -50,6 +52,34 @@ app = FastAPI(
     description="Predict hot water demand 72 hours ahead for 45 sensors",
     version="1.0.0"
 )
+
+def _warmup_enabled() -> bool:
+    return os.environ.get("MODEL_WARMUP", "1").strip().lower() not in {"0", "false", "no"}
+
+
+def _load_warmup_sample():
+    data_path = Path(__file__).parent / "data" / "train_full.npz"
+    if data_path.exists():
+        data = np.load(data_path, allow_pickle=True)
+        if "X" in data and "timestamps" in data:
+            x0 = data["X"][0]
+            ts0 = str(data["timestamps"][0])
+            return x0, ts0
+    x0 = np.zeros((HISTORY_LENGTH, N_SENSORS), dtype=np.float32)
+    ts0 = "2024-01-01T00:00:00"
+    return x0, ts0
+
+
+@app.on_event("startup")
+def warmup_models():
+    if not _warmup_enabled():
+        return
+    try:
+        x0, ts0 = _load_warmup_sample()
+        _ = predict(x0, ts0, None, None)
+        print("[api] warmup complete")
+    except Exception as exc:
+        print(f"[api] warmup failed: {exc}")
 
 
 @app.get("/")
