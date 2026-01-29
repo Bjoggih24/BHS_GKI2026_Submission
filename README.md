@@ -76,6 +76,12 @@ Each project is self-contained with its own reproducible pipeline, code, and doc
 
 ---
 
+## Competition Result
+
+This submission placed **2nd** in the university division and **8th** overall on the test set.
+
+---
+
 ## Getting Started
 
 Each project is independent. To work on a specific project, run:
