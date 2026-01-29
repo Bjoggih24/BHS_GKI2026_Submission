@@ -76,6 +76,7 @@ artifacts/runs/**/model.joblib
 artifacts/runs/**/model.pkl
 artifacts/runs/**/*.joblib
 artifacts/runs/**/*.pkl
+artifacts/runs/**/config.json
 
 # Prediction/validation outputs (can be regenerated)
 artifacts/runs/**/predictions.npy
@@ -106,13 +107,13 @@ desktop.ini
 ################################################################################
 
 # These files ARE important and SHOULD be committed:
-# - Model configuration files: artifacts/active_model.json, artifacts/runs/*/config.json
+# - Model configuration files: artifacts/active_model.json, submission_configs/*.json
 # - API code: api.py, model.py, models_v2.py
 # - Training scripts: scripts/build_train_full.py, scripts/build_weather_agg.py, scripts/train_models.py
 # - Feature utilities: feature_utils.py, utils.py
 # 
 # Example git commands to track these:
-# git add artifacts/active_model.json artifacts/runs/*/config.json
+# git add artifacts/active_model.json submission_configs/*.json
 # git add api.py model.py models_v2.py
 # git add scripts/build_train_full.py scripts/build_weather_agg.py scripts/train_models.py
 # git add feature_utils.py utils.py
@@ -129,3 +130,4 @@ scripts/*
 !scripts/train_models.py
 !scripts/eval_quick.py
 !scripts/eval_api.py
+!scripts/merge_batches.py

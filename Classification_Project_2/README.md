@@ -1,7 +1,7 @@
 # Icelandic Habitat Classification (Project 2)
 
-This README focuses on the reproducible pipeline used in `Classification_Project_2/`:
-data prep, model training, ensembling, and API inference.
+This README focuses on the reproducible pipeline used in `Classification_Project_2/`.
+It covers data prep, model training, ensembling, and API inference.
 
 ## Task Summary
 
@@ -16,37 +16,37 @@ Output:
 ## Project Structure (Key Files)
 
 API + Inference:
-- `api.py` -FastAPI `/predict` endpoint.
-- `model.py` -inference entry point; loads ensemble config and models.
-- `pyproject.toml` -project configuration and dependencies.
+- `api.py` - FastAPI `/predict` endpoint.
+- `model.py` - Inference entry point; loads the ensemble config and models.
+- `pyproject.toml` - Project configuration and dependencies.
 
 Feature Engineering + Utilities:
-- `feature_utils.py` -tabular feature engineering (v1/v2/v3).
-- `utils.py` -patch encoding/decoding and data helpers.
-- `config.py` -paths for data/artifacts/splits.
+- `feature_utils.py` - Tabular feature engineering (v1, v2, v3).
+- `utils.py` - Patch encoding and decoding plus data helpers.
+- `config.py` - Paths for data, artifacts, and splits.
 
 CNN:
-- `cnn/dataset.py` -CNN dataset loading utilities.
-- `cnn/model.py` -CNN model implementations.
-- `cnn/ensemble_submit.json` -final ensemble configuration for API inference.
+- `cnn/dataset.py` - CNN dataset loading utilities.
+- `cnn/model.py` - CNN model implementations.
+- `cnn/ensemble_submit.json` - Final ensemble configuration for API inference.
 
 Training + Evaluation Scripts:
-- `scripts/precompute_tabular_features.py` -build `X_tabular_v*.npy`.
-- `scripts/train_tabular.py` -train ET/LGBM/XGB/MLP/Transformer tabular models.
-- `scripts/train_cnn.py` -train CNN models (small_cnn and timm backbones).
-- `scripts/simple_ensemble_weights.py` -quick weighting tests.
+- `scripts/precompute_tabular_features.py` - Build `X_tabular_v*.npy`.
+- `scripts/train_tabular.py` - Train ET, LGBM, XGB, MLP, and transformer tabular models.
+- `scripts/train_cnn.py` - Train CNN models (small_cnn and timm backbones).
+- `scripts/simple_ensemble_weights.py` - Quick weighting tests.
 
 Artifacts (generated during training):
-- `artifacts/features/` -precomputed tabular features (`.npy` files).
-- `artifacts/experiments/` -trained model checkpoints and validation probabilities.
-- `artifacts/split_seed42/` -train/val index splits (required).
-- Other `artifacts/ensemble_*.json` files -alternative ensemble configurations.
+- `artifacts/features/` - Precomputed tabular features (`.npy` files).
+- `artifacts/experiments/` - Trained model checkpoints and validation probabilities.
+- `artifacts/split_seed42/` - Train and val index splits (required).
+- Other `artifacts/ensemble_*.json` files - Alternative ensemble configurations.
 
 ## Final Results
 
 **Validation Score (Leaderboard):** Weighted F1: 0.3899
 
-**Test Score (Leaderbaord):** Weighted F1: 0.39
+**Test Score (Leaderboard):** Weighted F1: 0.39
 
 ## Final Submission Ensemble
 
@@ -74,11 +74,16 @@ Before running the pipeline, ensure you have:
    - `train_idx.npy` -indices for training set
    - `val_idx.npy` -indices for validation set
 
-2. **Training data** in `data/train/`:
-   - `patches.npy` -raw satellite imagery patches
-   - `train.csv` -labels (column: `vistgerd_idx`)
+2. **Raw training data zips** in `data/`:
+   - `train_data_part1.zip`
+   - `train_data_part2.zip`
 
-3. **Submission configs** in `submission_configs/`:
+3. **Training data** in `data/train/` (created by `scripts/prepare_train_data.py`):
+   - `patches.npy` - Raw satellite imagery patches
+   - `train.csv` - Labels (column: `vistgerd_idx`)
+   - `patches_part1.npy`, `patches_part2.npy` - Intermediate files from the zip extract
+
+4. **Submission configs** in `submission_configs/`:
    - Only the configs used by the final ensemble
 
 ## Reproducible Pipeline
@@ -152,6 +157,8 @@ python scripts/tune_ensemble.py \
 Final submission config is stored in:
 - `cnn/ensemble_submit.json` (or set `ENSEMBLE_CONFIG=artifacts/ensemble_submit.json`)
 
+Important: `cnn/ensemble_submit.json` in this repo points to model files under `artifacts/` that are not tracked. After you train your own models, either update this file or export a new config from `scripts/tune_ensemble.py`.
+
 ## Inference / API
 
 Run locally:
@@ -159,7 +166,7 @@ Run locally:
 python api.py
 ```
 
-The endpoint returns a single class id per patch.
+The endpoint returns a single class id per patch. The API requires trained artifacts and a valid ensemble config.
 
 ## Repro Checklist
 
@@ -175,7 +182,7 @@ The endpoint returns a single class id per patch.
 - Validation uses the fixed split in `artifacts/split_seed42/`.
 - The primary performance lever is the ensemble configuration and model weights.
 - Model paths in the ensemble config are relative to `artifacts/` and should be updated after training.
-- Torch models (MLP, CNN) require `torch` and `torchvision` (optional dependencies in `pyproject.toml`).
+- Torch models (MLP, CNN) require `torch` and `torchvision`. The API also imports torch at startup.
 
 ## Git Tracking
 

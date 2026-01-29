@@ -10,6 +10,9 @@ SEED = 1337
 VAL_FRAC = 0.02   # 2%
 TEST_FRAC = 0.01  # 1% (optional)
 
+if not DATA.exists():
+    raise FileNotFoundError("Missing data/igc_full. Run create_dataset.py first.")
+
 ds = load_from_disk(str(DATA))
 n = len(ds)
 
