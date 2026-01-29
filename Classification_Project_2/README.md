@@ -45,7 +45,8 @@ Artifacts (generated during training):
 ## Final Results
 
 **Validation Score (Leaderboard):** Weighted F1: 0.3899
-**Test Scorer (Leaderbaord):** Weighted F1: 0.39
+
+**Test Score (Leaderbaord):** Weighted F1: 0.39
 
 ## Final Submission Ensemble
 
@@ -178,6 +179,9 @@ The endpoint returns a single class id per patch.
 
 ## Git Tracking
 
-All project code, configs, and data artifacts needed for reproducibility are intended to be tracked in git. The only excluded outputs are the large model training outputs under:
+Project code, configs, and small metadata are tracked in git. The following generated artifacts are excluded (regenerate via the pipeline):
 
-- `artifacts/experiments/`
+- `artifacts/experiments/` (trained models + validation probs)
+- `artifacts/features/` (precomputed tabular features)
+- `*.joblib`, `*.pt`, `*.pth` (model binaries)
+- `*.npy`, `*.npz` (large arrays)

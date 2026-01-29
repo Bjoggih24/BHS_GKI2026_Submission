@@ -14,6 +14,7 @@ Metric: **bits-per-byte (BPB)** - lower is better.
 ## Final Results
 
 **Validation Score (Leaderboard):** 1.5478 bits-per-byte (BPB)
+
 **Test Score (Leaderboard):** 1.51 bits-per-byte (BPB)
 
 ---
@@ -45,7 +46,7 @@ The submission runtime loads weights, reconstructs float weights, and performs f
 ### Packaging + Validation
 - `create_submission.py` - builds `submission.zip` from the `submission/` folder; prints zip size and warnings
 - `check_submission.py` - validates zip structure, imports `model.py`, runs batch-shape and timing tests
-- `score_local.py` - local BPB evaluation on a held-out validation split
+- `score_local.py` - local BPB evaluation.
 
 ### Data Preparation
 - `create_dataset.py` - downloads and prepares dataset locally in `data/igc_full/`
@@ -99,6 +100,7 @@ python scripts/train_tiny_gru.py \
 - `hidden_dim=544` is near the size limit (weights barely fit under 1MB after quantization/compression)
 - Remove `--amp` on CPU-only systems
 - Weights are automatically quantized and exported to `submission/`
+- The final submission model was trained for roughly **40–50 epochs**.
 
 ### 4) Validate submission
 
@@ -113,6 +115,8 @@ Evaluate BPB on validation split:
 ```bash
 python score_local.py
 ```
+
+**Note:** `score_local.py` samples random next-byte positions from the val split; it does **not** iterate sequentially over a fixed held-out document set. Treat it as a quick sanity check rather than a strict deterministic validation pass.
 
 ### 6) Build final submission zip
 

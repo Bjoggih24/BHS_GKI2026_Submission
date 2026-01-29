@@ -170,14 +170,19 @@ To disable: `MODEL_WARMUP=0 python api.py`
 
 **Output**: JSON with 72-hour forecasts for all 45 sensors
 
-### 6b) API-based eval (hosted, biased)
+### 6b) API-based eval (hosted, biased RAW data)
 
-Start the API in one terminal, then evaluate by sending raw payloads:
+Start the API in one terminal, then evaluate by sending **raw** payloads built directly from CSVs:
 ```bash
-python scripts/eval_api.py --train-path data/train_full.npz --max-samples 25
+python scripts/eval_api.py --data-dir data --max-samples 25
 ```
 
-Note: this uses training samples and is a rough, optimistic estimate. Treat it as a HIGHLY biased sanity check only.
+This simulates **exactly** what the competition website sends:
+- `sensor_history`: sliced directly from `sensor_timeseries.csv`
+- `weather_forecast`: filtered rows from `weather_forecasts.csv`
+- `weather_history`: filtered rows from `weather_observations.csv`
+
+**Note:** Still biased since it uses the training period (no held-out test set). Treat it as a sanity check only.
 
 ## Repro Checklist
 

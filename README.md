@@ -2,9 +2,9 @@
 
 This repository contains three complete machine learning projects from Gervigreindakeppni Íslands 2026:
 
-1. **Classification_Project_2** — Icelandic Habitat Classification
-2. **TimeSeries_Project_3** — Hot Water Demand Forecasting
-3. **NLP_Project_1** — Byte-level Language Modeling (Golden Plate)
+1. **Classification_Project_2** -Icelandic Habitat Classification
+2. **TimeSeries_Project_3** -Hot Water Demand Forecasting
+3. **NLP_Project_1** -Byte-level Language Modeling (Golden Plate)
 
 Each project is self-contained with its own reproducible pipeline, code, and documentation.
 
@@ -43,10 +43,10 @@ Each project is self-contained with its own reproducible pipeline, code, and doc
 - Equal weighting, optional hierarchical reconciliation
 
 **Key Files:**
-- `api.py` — FastAPI endpoint for real-time forecasts
-- `scripts/build_train_full.py` — data pipeline
-- `scripts/train_models.py` — model training
-- `README.md` — full setup and reproducible pipeline
+- `api.py` -FastAPI endpoint for real-time forecasts
+- `scripts/build_train_full.py` -data pipeline
+- `scripts/train_models.py` -model training
+- `README.md` -full setup and reproducible pipeline
 
 **Location:** [`TimeSeries_Project_3/`](TimeSeries_Project_3/)
 
@@ -67,10 +67,10 @@ Each project is self-contained with its own reproducible pipeline, code, and doc
 - Achieves competitive BPB on held-out validation data
 
 **Key Files:**
-- `submission/model.py` — evaluator's entry point
-- `scripts/train_tiny_gru.py` — training script
-- `submission/gru_config.json` — model configuration
-- `README.md` — setup and training instructions
+- `submission/model.py` -evaluator's entry point
+- `scripts/train_tiny_gru.py` -training script
+- `submission/gru_config.json` -model configuration
+- `README.md` -setup and training instructions
 
 **Location:** [`NLP_Project_1/`](NLP_Project_1/)
 

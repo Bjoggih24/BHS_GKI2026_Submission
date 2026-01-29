@@ -2,11 +2,13 @@
 """
 Evaluate hosted API by sending realistic request payloads.
 
-Simulates what the competition website would send:
-- sensor_history: (672, 45) from train_full.npz
+Simulates EXACTLY what the competition website would send:
+- sensor_history: (672, 45) sliced directly from raw sensor_timeseries.csv
 - timestamp: ISO 8601 string
 - weather_forecast: rows from weather_forecasts.csv for the 72h forecast window
 - weather_history: rows from weather_observations.csv for the 672h history window
+
+This is the most accurate local reproduction of the competition eval flow.
 """
 
 from __future__ import annotations
@@ -28,7 +30,10 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from utils import compute_score, normalize_timestamps
+from utils import compute_score
+
+HISTORY_LENGTH = 672
+HORIZON = 72
 
 
 def _pick_indices(n: int, max_samples: int) -> np.ndarray:
@@ -62,6 +67,52 @@ def _df_rows_to_list(df: pd.DataFrame) -> list[list]:
     return [[_safe_value(v) for v in row] for row in df.values]
 
 
+def _load_sensor_timeseries(data_dir: Path) -> pd.DataFrame:
+    """Load raw sensor timeseries and reindex to hourly."""
+    csv_path = data_dir / "sensor_timeseries.csv"
+    if not csv_path.exists():
+        raise FileNotFoundError(f"Missing {csv_path}")
+    df = pd.read_csv(csv_path)
+    df["CTime"] = pd.to_datetime(df["CTime"], errors="coerce")
+    df = df.sort_values("CTime").set_index("CTime")
+    df = df.asfreq("h")  # Reindex to hourly, exposing gaps as NaN
+    return df
+
+
+def _slice_sensor_history(sensor_df: pd.DataFrame, forecast_start: pd.Timestamp) -> np.ndarray:
+    """
+    Slice 672 hours of sensor history ending at forecast_start - 1h.
+    Returns (672, N_SENSORS) array with NaN replaced by 0 for JSON.
+    """
+    hist_end = forecast_start - pd.Timedelta(hours=1)
+    hist_start = forecast_start - pd.Timedelta(hours=HISTORY_LENGTH)
+    try:
+        sensor_hist = sensor_df.loc[hist_start:hist_end]
+    except Exception:
+        return None
+    if len(sensor_hist) != HISTORY_LENGTH:
+        return None
+    arr = sensor_hist.values.astype(np.float32)
+    # Replace NaN with 0 for JSON serialization (matches real API behavior)
+    arr = np.nan_to_num(arr, nan=0.0, posinf=0.0, neginf=0.0)
+    return arr
+
+
+def _slice_targets(sensor_df: pd.DataFrame, forecast_start: pd.Timestamp) -> np.ndarray:
+    """
+    Slice 72 hours of targets starting at forecast_start.
+    Returns (72, N_SENSORS) array or None if incomplete.
+    """
+    target_end = forecast_start + pd.Timedelta(hours=HORIZON - 1)
+    try:
+        targets = sensor_df.loc[forecast_start:target_end]
+    except Exception:
+        return None
+    if len(targets) != HORIZON:
+        return None
+    return targets.values.astype(np.float32)
+
+
 def _filter_weather_forecast(
     forecasts_df: pd.DataFrame,
     forecast_start: pd.Timestamp,
@@ -78,18 +129,16 @@ def _filter_weather_forecast(
     """
     df = forecasts_df.copy()
     
-    # Parse timestamps
     df["_target_time"] = pd.to_datetime(df["date_time"], errors="coerce", utc=True)
     df["_target_time"] = df["_target_time"].dt.tz_localize(None)
     df["_issue_time"] = pd.to_datetime(df["value_date"], errors="coerce", utc=True)
     df["_issue_time"] = df["_issue_time"].dt.tz_localize(None)
     
-    # Filter to forecast window
     horizon_end = forecast_start + pd.Timedelta(hours=horizon_hours)
     mask = (
         (df["_target_time"] >= forecast_start) &
         (df["_target_time"] < horizon_end) &
-        (df["_issue_time"] <= forecast_start)  # No future leakage
+        (df["_issue_time"] <= forecast_start)
     )
     
     filtered = df.loc[mask].drop(columns=["_target_time", "_issue_time"])
@@ -110,11 +159,9 @@ def _filter_weather_history(
     """
     df = observations_df.copy()
     
-    # Parse timestamps
     df["_obs_time"] = pd.to_datetime(df["timi"], errors="coerce", utc=True)
     df["_obs_time"] = df["_obs_time"].dt.tz_localize(None)
     
-    # Filter to history window
     history_start = forecast_start - pd.Timedelta(hours=history_hours)
     mask = (
         (df["_obs_time"] >= history_start) &
@@ -125,54 +172,86 @@ def _filter_weather_history(
     return _df_rows_to_list(filtered)
 
 
+def _generate_eval_timestamps(sensor_df: pd.DataFrame, stride: int, min_date: str, max_date: str) -> list[pd.Timestamp]:
+    """Generate evaluation timestamps matching train_full.npz generation logic."""
+    min_dt = pd.Timestamp(min_date).floor("h")
+    max_dt = pd.Timestamp(max_date).floor("h")
+    
+    earliest_start = max(min_dt, sensor_df.index.min() + pd.Timedelta(hours=HISTORY_LENGTH))
+    latest_start = min(max_dt, sensor_df.index.max() - pd.Timedelta(hours=HORIZON))
+    
+    timestamps = pd.date_range(start=earliest_start, end=latest_start, freq=f"{stride}h")
+    return list(timestamps)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Eval via hosted API (simulates website calls)."
+        description="Eval via hosted API using RAW data (simulates website exactly)."
     )
-    parser.add_argument("--train-path", default="data/train_full.npz")
     parser.add_argument("--data-dir", default="data")
     parser.add_argument("--api-url", default="http://0.0.0.0:8080/predict")
     parser.add_argument("--max-samples", type=int, default=25)
+    parser.add_argument("--stride", type=int, default=24, help="Stride between samples (hours)")
+    parser.add_argument("--min-date", default="2022-07-01", help="Start date for samples")
+    parser.add_argument("--max-date", default="2024-12-31", help="End date for samples")
     parser.add_argument("--timeout", type=float, default=120.0)
     parser.add_argument("--no-weather", action="store_true", help="Skip weather data")
     args = parser.parse_args()
 
-    data_path = Path(args.train_path)
     data_dir = Path(args.data_dir)
-    if not data_path.exists():
-        raise FileNotFoundError(f"Missing {data_path}")
 
-    # Load training samples
-    data = np.load(data_path, allow_pickle=True)
-    X = data["X"]
-    y = data["y"]
-    timestamps = normalize_timestamps(data["timestamps"])
+    # Load raw sensor data
+    print("Loading raw sensor_timeseries.csv...")
+    sensor_df = _load_sensor_timeseries(data_dir)
+    print(f"  sensors: {len(sensor_df.columns)} columns")
+    print(f"  range: {sensor_df.index.min()} -> {sensor_df.index.max()}")
 
-    idx = _pick_indices(len(X), args.max_samples)
-    X = X[idx]
-    y = y[idx]
-    timestamps = timestamps[idx]
+    # Generate eval timestamps
+    all_timestamps = _generate_eval_timestamps(sensor_df, args.stride, args.min_date, args.max_date)
+    print(f"  potential samples: {len(all_timestamps)}")
+
+    # Pick subset
+    idx = _pick_indices(len(all_timestamps), args.max_samples)
+    eval_timestamps = [all_timestamps[i] for i in idx]
+    print(f"  evaluating: {len(eval_timestamps)} samples")
 
     # Load weather CSVs (once)
     forecasts_df = None
     observations_df = None
     if not args.no_weather:
-        print("Loading weather CSVs...")
+        print("\nLoading weather CSVs...")
         forecasts_df = pd.read_csv(data_dir / "weather_forecasts.csv", low_memory=False)
         observations_df = pd.read_csv(data_dir / "weather_observations.csv", low_memory=False)
         print(f"  forecasts: {len(forecasts_df)} rows")
         print(f"  observations: {len(observations_df)} rows")
 
-    print(f"\nEvaluating {len(X)} samples via API...")
-    preds = []
-    scores = []
+    print(f"\nEvaluating {len(eval_timestamps)} samples via API (RAW data)...")
+    preds_list = []
+    y_list = []
+    X_list = []
     start = perf_counter()
 
     with httpx.Client(timeout=args.timeout) as client:
-        for i, (x, ts) in enumerate(zip(X, timestamps), start=1):
-            # Parse timestamp
-            forecast_start = pd.Timestamp(str(ts)).floor("h")
+        for i, forecast_start in enumerate(eval_timestamps, start=1):
+            forecast_start = forecast_start.floor("h")
             
+            # Slice sensor history directly from raw CSV
+            sensor_history = _slice_sensor_history(sensor_df, forecast_start)
+            if sensor_history is None:
+                print(f"  [{i:3d}/{len(eval_timestamps)}] ts={forecast_start} | SKIPPED (sensor gap)")
+                continue
+            
+            # Slice targets for scoring
+            targets = _slice_targets(sensor_df, forecast_start)
+            if targets is None:
+                print(f"  [{i:3d}/{len(eval_timestamps)}] ts={forecast_start} | SKIPPED (target gap)")
+                continue
+            
+            # Skip if targets have NaN (can't score)
+            if np.isnan(targets).any():
+                print(f"  [{i:3d}/{len(eval_timestamps)}] ts={forecast_start} | SKIPPED (target NaN)")
+                continue
+
             # Build weather arrays for this specific time window
             weather_forecast = None
             weather_history = None
@@ -181,12 +260,9 @@ def main() -> None:
             if observations_df is not None:
                 weather_history = _filter_weather_history(observations_df, forecast_start)
 
-            # Clean sensor history (replace NaN with 0 for JSON)
-            x_clean = np.nan_to_num(x, nan=0.0, posinf=0.0, neginf=0.0)
-
             payload = {
-                "sensor_history": x_clean.tolist(),
-                "timestamp": str(ts),
+                "sensor_history": sensor_history.tolist(),
+                "timestamp": forecast_start.isoformat(),
                 "weather_forecast": weather_forecast,
                 "weather_history": weather_history,
             }
@@ -194,31 +270,41 @@ def main() -> None:
             resp = client.post(args.api_url, json=payload)
             resp.raise_for_status()
             pred = np.asarray(resp.json()["predictions"], dtype=np.float32)
-            preds.append(pred)
+            
+            preds_list.append(pred)
+            y_list.append(targets)
+            X_list.append(sensor_history)
 
             # Compute running score
-            y_so_far = y[:i]
-            preds_so_far = np.array(preds, dtype=np.float32)
-            X_so_far = X[:i]
+            y_so_far = np.array(y_list, dtype=np.float32)
+            preds_so_far = np.array(preds_list, dtype=np.float32)
+            X_so_far = np.array(X_list, dtype=np.float32)
             score_so_far = compute_score(y_so_far, preds_so_far, X_so_far)
-            scores.append(score_so_far)
 
             wf_rows = len(weather_forecast) if weather_forecast else 0
             wh_rows = len(weather_history) if weather_history else 0
-            print(f"  [{i:3d}/{len(X)}] ts={ts[:16]} | wf={wf_rows:4d} wh={wh_rows:5d} | running skill={score_so_far:.4f}")
+            ts_str = forecast_start.strftime("%Y-%m-%dT%H:%M")
+            print(f"  [{i:3d}/{len(eval_timestamps)}] ts={ts_str} | wf={wf_rows:5d} wh={wh_rows:5d} | running skill={score_so_far:.4f}")
 
     elapsed = perf_counter() - start
 
-    preds = np.asarray(preds, dtype=np.float32)
+    if len(preds_list) == 0:
+        print("\nNo valid samples evaluated!")
+        return
+
+    preds = np.asarray(preds_list, dtype=np.float32)
+    y = np.asarray(y_list, dtype=np.float32)
+    X = np.asarray(X_list, dtype=np.float32)
+    
     final_score = compute_score(y, preds, X)
     rmse = float(np.sqrt(np.mean((y - preds) ** 2)))
 
     print("\n" + "=" * 60)
-    print("API eval results (biased; uses training samples):")
-    print(f"  samples: {len(X)}")
+    print("API eval results (RAW data, biased since uses training period):")
+    print(f"  samples: {len(preds)}")
     print(f"  skill:   {final_score:.4f}")
     print(f"  rmse:    {rmse:.4f}")
-    print(f"  time:    {elapsed:.2f}s ({elapsed/len(X):.2f}s per sample)")
+    print(f"  time:    {elapsed:.2f}s ({elapsed/len(preds):.2f}s per sample)")
     print("=" * 60)
 
 
